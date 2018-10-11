@@ -203,10 +203,15 @@ function performCommonParameterValidation(rawParams) {
         return { validationError: 'isJSONData and isBinaryValue cannot both be enabled.' };
     }
 
+    if (rawParams.startTimeOffset && parseInt(rawParams.startTimeOffset, 10).isNaN) {
+        return { validationError: 'startTimeOffset must be an int.' };
+    }
+
     // now that everything else is valid, let's add these
     validatedParams.isBinaryKey = getBooleanFromArgs(rawParams, 'isBinaryKey');
     validatedParams.authKey = rawParams.authKey;
     validatedParams.triggerURL = getTriggerURL(rawParams.endpoint, rawParams.triggerName);
+    validatedParams.startTimeOffset = rawParams.startTimeOffset
 
     const uuid = require('uuid');
     validatedParams.uuid = uuid.v4();

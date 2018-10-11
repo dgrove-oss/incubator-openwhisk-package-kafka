@@ -51,7 +51,7 @@ def healthRoute():
 
 def main():
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     component = os.getenv('INSTANCE', 'messageHubTrigger-0')
 

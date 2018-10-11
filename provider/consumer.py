@@ -170,6 +170,11 @@ class ConsumerProcess (Process):
         else:
             self.encodeKeyAsBase64 = False
 
+        if "startTimeOffset" in params:
+            self.startTimeOffset = params["startTimeOffset"]
+        else:
+            self.startTimeOffset = 0
+
         self.database = Database()
 
         # always init consumer to None in case the consumer needs to shut down
@@ -299,8 +304,21 @@ class ConsumerProcess (Process):
                                 'security.protocol': 'sasl_ssl'
                              })
 
+            logging.debug("AJA: About to create consumer")
+
             consumer = KafkaConsumer(config)
             consumer.subscribe([self.topic], self.__on_assign, self.__on_revoke)
+            if self.startTimeOffset != 0:
+                logging.debug("AJA: non-zero startTimeOffset")
+                # Seek to the offset of the desired timestamp in each subscribed partition
+                logging.info("Attempting to seek to a timestamp offset of {}"+format(self.startTimeOffset))
+                topicPartitions = consumer.assignment()
+                logging.info("I have {} topicPartitions".format(len(topicPartitions)))
+                targetTime = int(time.time()) - self.startTimeOffset
+                offsets = consumer.offsets_for_time
+                offsetPartitions = list(map(lambda tp: TopicPartition(tp.topic, tp.partition, targetTime), topicPartitions))
+                map(lambda op: consumer.seek(op), offsetPartitions)
+
             logging.info("[{}] Now listening in order to fire trigger".format(self.trigger))
             return consumer
 
